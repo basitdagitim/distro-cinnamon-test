@@ -76,7 +76,7 @@ for paket in rsync kbd libpcre2 busybox \
 do
 chroot $rootfs /bin/bps -i $paket; 
 done
-chroot $rootfs /sbin/depmod --all --basedir=lib	#modüllerin indeks dosyası oluşturuluyor
+#chroot $rootfs /sbin/depmod --all --basedir=lib	#modüllerin indeks dosyası oluşturuluyor
 #glib-> libffi 
 #gtk3 ->glib gdk_pixbuf harfbuzz fontconfig
 #update-mime-database-> gcc 
