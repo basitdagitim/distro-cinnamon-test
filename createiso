@@ -67,8 +67,9 @@ $rootfs/bin/bps -ri coreutils $rootfs
 $rootfs/bin/bps -ri util-linux $rootfs
 $rootfs/bin/bps -ri openrc $rootfs
 #chroot $rootfs /bin/bps -i distro-base
+#linux-headers linux-libc-dev libc6-dev libstdc++-dev
 for paket in rsync kbd libpcre2 busybox \
-		kernel linux-headers linux-libc-dev libc6-dev libstdc++-dev live-boot live-config \
+		kernel live-boot live-config \
 		parted dosfstools kmod grub \
 		zstd  brotli expat libmd eudev findutils pam \
 		e2fsprogs \gzip \gawk initramfs-tools zlib audit  \
