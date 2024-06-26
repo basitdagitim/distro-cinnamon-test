@@ -109,7 +109,7 @@ chroot $rootfs /bin/bps -i setxkbmap
 chroot $rootfs /bin/bps -i xorg-xset
 chroot $rootfs /bin/bps -i lightdm
 chroot $rootfs /bin/bps -i lightdm-gtk-greeter
-chroot $rootfs /bin/bps -i lightdm-pardus-greeter
+#hroot $rootfs /bin/bps -i lightdm-pardus-greeter
 chroot $rootfs /bin/bps -i libgpg-error
 chroot $rootfs /bin/bps -i live-installer
 
