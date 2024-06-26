@@ -1,2 +1,2 @@
 # Basitdagitim
-cinnamon iso end user test ss
+cinnamon iso end user test
