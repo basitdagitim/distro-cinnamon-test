@@ -118,10 +118,13 @@ chroot $rootfs /bin/bps -i locale-tr
 chroot $rootfs /bin/install-remove-to-do
 
 ###live config işlemleri yapılıyor
-cd $rootfs/sbin
-rm init
-ln -s openrc-init init
-cd -
+#cd $rootfs/sbin
+#rm init
+#ln -s openrc-init init
+#cd -
+##Kurulum scripti
+cp kur1 $rootfs/bin/kur1
+
 chroot $rootfs useradd live -m -s /bin/sh  -d /home/live
 chroot $rootfs echo -e "live\nlive\n"|chroot $rootfs passwd live
 
