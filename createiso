@@ -73,7 +73,7 @@ for paket in rsync kbd libpcre2 busybox \
 		parted dosfstools kmod grub \
 		zstd  brotli expat libmd eudev findutils pam \
 		e2fsprogs \gzip \gawk initramfs-tools zlib audit  \
-		 xz-utils libxml2  libselinux nano
+		 xz-utils libxml2  libselinux nano dialog
 do
 chroot $rootfs /bin/bps -i $paket; 
 done
