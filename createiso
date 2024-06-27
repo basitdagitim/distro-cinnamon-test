@@ -123,7 +123,7 @@ chroot $rootfs /bin/install-remove-to-do
 #ln -s openrc-init init
 #cd -
 ##Kurulum scripti
-cp kur1 $rootfs/bin/kur1
+cp /root/kur1 $rootfs/bin/kur1
 
 chroot $rootfs useradd live -m -s /bin/sh  -d /home/live
 chroot $rootfs echo -e "live\nlive\n"|chroot $rootfs passwd live
