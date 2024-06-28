@@ -47,8 +47,9 @@ echo "anadolulinux/lfs-binary-packages">>$rootfs/etc/bps/sources.list
 ### installing bps package in rootfs
 $rootfs/bin/bps -u $rootfs
 #**********************************************************************
-echo root:x:0:0:root:/root:/bin/sh > $rootfs/etc/passwd 
-chmod 755 $rootfs/etc/passwd
+#echo root:x:0:0:root:/root:/bin/sh > $rootfs/etc/passwd 
+#chmod 755 $rootfs/etc/passwd
+#chroot $rootfs echo -e "1\n1\n"|chroot $rootfs passwd root
 #**********************************************************************
 #chroot $rootfs /bin/bps -i distro-core-base
 $rootfs/bin/bps -ri glibc $rootfs
@@ -124,6 +125,7 @@ chroot $rootfs /bin/install-remove-to-do
 #cd -
 ##Kurulum scripti
 cp /root/kur1 $rootfs/bin/kur1
+cp /root/kur2 $rootfs/bin/kur2
 
 chroot $rootfs useradd live -m -s /bin/sh  -d /home/live
 chroot $rootfs echo -e "live\nlive\n"|chroot $rootfs passwd live
@@ -131,7 +133,7 @@ chroot $rootfs echo -e "live\nlive\n"|chroot $rootfs passwd live
 for grp in users tty wheel cdrom audio dip video plugdev netdev; do
     chroot $rootfs usermod -aG $grp live || true
 done
-chroot $rootfs echo -e "1\n1\n"|chroot $rootfs passwd root
+
 
 
 ### update-initrd
@@ -173,7 +175,7 @@ echo '    initrd /boot/initrd.img' >> $distro/iso/boot/grub/grub.cfg
 echo '}' >> $distro/iso/boot/grub/grub.cfg
 
 echo 'menuentry "Kur Tek Part GNU/Linux 64-bit" --class liveiso  {' >> $distro/iso/boot/grub/grub.cfg
-echo '    linux /boot/vmlinuz boot=live init=/bin/kur1 ' >> $distro/iso/boot/grub/grub.cfg
+echo '    linux /boot/vmlinuz boot=live init=/bin/kur ' >> $distro/iso/boot/grub/grub.cfg
 echo '    initrd /boot/initrd.img' >> $distro/iso/boot/grub/grub.cfg
 echo '}' >> $distro/iso/boot/grub/grub.cfg
 

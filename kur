@@ -1,0 +1,267 @@
+#!/bin/bash
+installdisk=""
+installbootpartition=""
+installsystempartition=""
+installrootpasswd=""
+installrootpasswdstar=""
+installusername=""
+installuserpasswd=""
+installrootpasswdstar=""
+installlang="tr_TR"
+installkeyboard="trq"
+mesaj="Ayarları Seçin"
+emptyfieldcheck()
+{
+if [ -z "${installdisk}" ];then
+	mesaj="Disk Seçiniz"
+	echo "1"
+elif [ -z "${installbootpartition}" ];then
+	mesaj="boot Kurulumu için Bölümü Seçiniz"
+	echo "1"
+elif [ -z "${installsystempartition}" ];then
+	mesaj="system Kurulumu için Bölümü Seçiniz"
+	echo "1"
+elif [ -z "${installrootpasswd}" ];then
+	mesaj="root Parolası Belirleyiniz"
+	echo "1"
+elif [ -z "${installusername}" ];then
+	mesaj="Kullanıcı Adı Belirleyiniz"
+	echo "1"
+elif [ -z "${installuserpasswd}" ];then
+	mesaj="Kullanıcı Parolası Belirleyiniz"
+	echo "1"
+elif [ -z "${installlang}" ];then
+	mesaj="Dil Seçiniz"
+	echo "1"
+elif [ -z "${installkeyboard}" ];then
+	mesaj="Klavye Seçiniz"
+	echo "1"
+elif [ -n "${installdisk}" ] || [ -n "${installbootpartition}" ]  || [ -n "${installsystempartition}" ]|| [ -n "${installrootpasswd}" ] || [ -n "${installusername}" ] || [ -n "${installuserpasswd}" ] || [ -n "${installlang}" ] || [ -n "${installkeyboard}" ];then
+	echo "2"
+fi
+}
+install_main(){
+echo "kurulum yapılacak disk : ${installdisk}"
+return
+}
+select_disk_menu(){
+    while true ;  do
+       installdisk=/dev/$(TITLE="Select a disk for installation" select_disk)
+       setup_grub=${installdisk}
+       return
+    done
+}
+select_disk_boot_partition_menu(){
+    while true ;  do
+       installbootpartition=/dev/$(TITLE="Select a disk for installation Partition" select_partition)
+       installsystempartition="${installbootpartition}"
+       return
+    done
+}
+
+select_disk_system_partition_menu(){
+    while true ;  do
+       installsystempartition=/dev/$(TITLE="Select a disk for installation Partition" select_partition)
+       return
+    done
+}
+
+###### Partition selection menu ######
+select_partition(){
+    export PATH="/bin:/sbin:/usr/bin:/usr/sbin"
+    menu=()
+   # for disk in /sys/block/* ; do
+        disk=${installdisk/*\//}
+        for part in /sys/block/$disk/$disk* ; do
+            if [[ -d $part ]] ; then
+                part=${part/*\//}
+                type=$(blkid | grep "/dev/$part:" | sed "s/.* TYPE=\"//g;s/\".*//g")
+                label=$(blkid | grep "/dev/$part:" | grep LABEL | sed "s/.* LABEL=\"//g;s/\".*//g")
+                if [[ "$label" == "" ]] ; then
+                    label="-"
+                fi
+                size=$(lsblk -r | grep "^$part " | cut -f4 -d" ")
+                menu+=("$part" "$type    $label    $size")
+            fi
+        done
+   # done >/dev/null
+    info_label="Partition | Filesystem | Label | Size"
+    while [[ ! -b "/dev/$result" ]] ; do
+        result=$(dialog --no-cancel \
+            --output-fd 1 --menu \
+            "$TITLE\n\n${info_label}" 0 0 0 \
+            "${menu[@]}")
+    done
+    echo $result
+}
+
+###### Disk selection menu ######
+select_disk(){
+    export PATH="/bin:/sbin:/usr/bin:/usr/sbin"
+    menu=()
+    for disk in $(ls /sys/block/ | grep -e sd -e nvme) ; do
+        disk=${disk/*\//}
+        size=$(lsblk -r | grep "^$disk " | cut -f4 -d" ")
+        menu+=("$disk" "$size")
+    done >/dev/null
+    while [[ ! -b "/dev/$result" ]] ; do
+        result=$(dialog --no-cancel \
+            --output-fd 1 --menu \
+            "$TITLE" 0 0 0 \
+            "${menu[@]}")
+    done
+    echo $result
+}
+
+###### username password menu ######
+set_root_password(){
+    while [[ "$installrootpasswd" == "" ]] ; do
+       installrootpasswd=$(dialog  --no-cancel --output-fd 1 \
+            --title "$TITLE" \
+            --backtitle "initial settings" \
+            --inputbox "Enter password" 0 0
+        )
+    done
+    installrootpasswdstar="*******"
+    echo $installrootpasswd
+}
+set_username_password(){
+    while [[ "$installuserpasswd" == "" ]] ; do
+       installuserpasswd=$(dialog  --no-cancel --output-fd 1 \
+            --title "$TITLE" \
+            --backtitle "initial settings" \
+            --inputbox "Enter password" 0 0
+        )
+    done
+    installuserpasswdstar="*******"
+    echo $installuserpasswd
+}
+set_username(){
+    while [[ "$installusername" == "" ]] ; do
+       installusername=$(dialog  --no-cancel --output-fd 1 \
+            --title "$TITLE" \
+            --backtitle "initial settings" \
+            --inputbox "Enter username" 0 0
+        )
+    done
+    echo $installusername
+}
+
+###### Language menu ######
+lang_menu(){
+    ls /usr/share/i18n/locales | grep -v "^ku" | grep -v "^hy" | grep -v "@" | while read line ; do
+        lang=$(echo $line | cut -f1 -d"_")
+        if [[ ! -d /usr/share/locale/$lang ]] ; then
+            continue
+        fi
+        desc=$(cat /usr/share/i18n/locales/$line | grep "^title " | cut -f2 -d"\"" | sed "s/ /_/g")
+        if [[ "$desc" == "" ]] ; then
+            desc="$line"
+        fi
+        echo "$line $desc"
+    done
+}
+
+set_language(){
+    installlang=$(dialog --no-cancel \
+                --output-fd 1 --menu \
+                "Test" 0 0 0 \
+                $(lang_menu)
+            )
+    echo $installlang
+}
+###### Keyboard menu ######
+set_keyboard(){
+    while [[ "$installkeyboard" == "" ]] ; do
+       installkeyboard=$(dialog  --no-cancel --output-fd 1 \
+            --title "$TITLE" \
+            --backtitle "Keyboard Settings" \
+            --inputbox "Enter Keyboard(trq, trf)" 0 0
+        )
+    done
+    echo $installkeyboard
+}
+install1()
+{
+source kur1
+echo "tek bölüme kurulum ........"
+#exit
+}
+install2()
+{
+source kur2
+echo "boot-system ayrı bölümlere kurulum ........"
+#exit  
+}
+###### Main Menu ######
+main_menu(){
+    while true ; do
+        result=$(dialog --no-cancel \
+        --backtitle "$mesaj"\
+            --output-fd 1 --menu \
+            "Install Menu" 0 0 0 \
+            "1" "Select Disk		( $installdisk )" \
+            "2" "Create / Modify Partition" \
+            "3" "Select (boot) Partition	( $installbootpartition )" \
+            "4" "Select (system) Partition( $installsystempartition )" \
+            "5" "Set root Password	( $installrootpasswdstar )" \
+            "6" "Set Username 		( $installusername )" \
+            "7" "Set User Password 	( $installuserpasswdstar )" \
+            "8" "Set Language	 	( $installlang )" \
+	    "9" "Set Keyboard	 	( $installkeyboard )" \
+            "10" "Install" \
+            "11" "Run Terminal" \
+            "0" "Reboot"
+        )
+      #              "2" "Manual Install" \
+        echo -ne "\033c"
+        if [[ $result -eq 0 ]] ; then
+            #reboot -f
+            echo "reboot"
+        elif [[ $result -eq 1 ]] ; then
+           select_disk_menu
+        elif [[ $result -eq 2 ]] ; then
+            cfdisk $installdisk
+        elif [[ $result -eq 3 ]] ; then
+            select_disk_boot_partition_menu
+        elif [[ $result -eq 4 ]] ; then
+            select_disk_system_partition_menu
+        elif [[ $result -eq 5 ]] ; then
+             installrootpasswdstar=""
+	     installrootpasswd=""
+            set_root_password
+            #echo "set root passwd"
+        elif [[ $result -eq 6 ]] ; then
+            installusername=""
+            set_username
+            #echo "set username"
+        elif [[ $result -eq 7 ]] ; then
+            installuserpasswdstar=""
+	    installuserpasswd=""
+            set_username_password
+            #echo "set userpasswd"
+        elif [[ $result -eq 8 ]] ; then
+		set_language
+        elif [[ $result -eq 9 ]] ; then
+            installkeyboard=""
+	   set_keyboard
+        elif [[ $result -eq 10 ]] ; then
+            #start_openrc
+           durum=$(emptyfieldcheck)
+           if [[ "$durum" == "2" ]] ; then
+           	echo "kuruluma geçildi........"
+           	if [[ "$installsystempartition" == "$installbootpartition" ]] ; then
+           		install1
+           	else
+           		install2         	
+           	fi
+           fi
+        elif [[ $result -eq 11 ]] ; then
+           echo -e "\033[33;1mTerminal mode. You can type exit and go back.\033[;0m"
+            PS1="\033[32;1m>>>\033[;0m " /bin/busybox ash
+        fi
+        echo $result
+    done
+}
+
+main_menu
