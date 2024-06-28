@@ -124,6 +124,7 @@ chroot $rootfs /bin/install-remove-to-do
 #ln -s openrc-init init
 #cd -
 ##Kurulum scripti
+cp /root/kur $rootfs/bin/kur
 cp /root/kur1 $rootfs/bin/kur1
 cp /root/kur2 $rootfs/bin/kur2
 
