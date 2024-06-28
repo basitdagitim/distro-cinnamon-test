@@ -185,12 +185,14 @@ install1()
 {
 source kur1
 echo "tek bölüme kurulum ........"
+kurulum
 #exit
 }
 install2()
 {
 source kur2
 echo "boot-system ayrı bölümlere kurulum ........"
+kurulum
 #exit  
 }
 ###### Main Menu ######
