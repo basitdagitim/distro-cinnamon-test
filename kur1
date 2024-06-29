@@ -12,7 +12,7 @@ modprobe ext4
 
 debug=false
 DISK=${installdisk/*\//}
-echo kurulum yapılacak disk $DISK
+echo "Tek Bolum  Kurulum Yapılacak Disk $DISK"
 
 fallback(){
         echo -e "\033[31;1mInstallation failed.\033[;0m"
@@ -42,7 +42,7 @@ echo "*********************disk bölümleri silindi ****************************
          sync && sleep 1
 	yes |tune2fs -O ^metadata_csum /dev/${DISK}1
 	 sync && sleep 1
-        yes | mkfs.ext4  /dev/${DISK}1 || fallback
+        yes | mkfs.ext2  /dev/${DISK}1 || fallback
         yes | parted /dev/${DISK} set 1 esp on || fallback
         sync && sleep 1
         mount /dev/${DISK}1  /hedef || fallback
@@ -52,7 +52,8 @@ echo "********************* kurulum başladı******************************"
 mount -t iso9660 -o loop /dev/sr0 cdrom
 mount -t squashfs -o loop /cdrom/live/filesystem.squashfs /kaynak
 #cp -prfv /kaynak/* /hedef/
-rsync -axHAWXS --numeric-ids --info=progress2 /kaynak/ /hedef/
+#rsync -axHAWXS --numeric-ids --info=progress2 /kaynak/ /hedef/
+ls /kaynak/ | xargs -n1 -P$(nproc) -I% /usr/bin/rsync -ravhHAX --info=progress2 /kaynak/% /hedef/ &>/dev/null|| fallback
 cp /cdrom/boot/initrd.img /hedef/boot/initrd.img-$(uname -r)
 cp /cdrom/boot/vmlinuz /hedef/boot/vmlinuz-$(uname -r)
 cp /hedef/etc/kernel-config /hedef/boot/config-$(uname -r)
@@ -72,13 +73,13 @@ mount --bind /run /hedef/run
 mount --bind /tmp /hedef/tmp
 chroot /hedef /bin/busybox --install -s /bin
 
-chroot /hedef /etc/init.d/agettyinstall
-rm /hedef/etc/init.d/agettyinstall
+cp /hedef/etc/skel/.xinitrc /hedef/root/
+cp /hedef/etc/skel/.bashrc /hedef/root/
+cp /hedef/etc/skel/.profile /hedef/root/
 
 
 chroot /hedef /usr/sbin/update-initramfs -u -k $(uname -r)
-
-chroot /hedef grub-install --boot-directory=/boot /dev/${DISK} --target=i386-pc
+chroot /hedef grub-install --removable --boot-directory=/boot /dev/${DISK} --target=i386-pc
 
 mkdir -p /hedef/boot/grub
 bid=$(blkid /dev/${DISK}1|cut -d' ' -f2|cut -c 7-42)

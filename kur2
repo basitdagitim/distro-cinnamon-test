@@ -12,7 +12,7 @@ modprobe ext4
 
 debug=false
 DISK=${installdisk/*\//}
-echo kurulum yapılacak disk $DISK
+echo "boot system Ayrı Kurulum Yapılacak Disk $DISK
 
 fallback(){
         echo -e "\033[31;1mInstallation failed.\033[;0m"

@@ -226,11 +226,12 @@ main_menu(){
         elif [[ $result -eq 2 ]] ; then
             cfdisk $installdisk
         elif [[ $result -eq 3 ]] ; then
-            if [[ -d /sys/block/$installdisk/${installdisk}1 ]] ; then
+        	dsk=${installdisk/*\//}
+            if [ ! -d "/sys/block/$dsk/${dsk}1" ] ; then
             	  cfdisk $installdisk
+            else
+            	select_disk_boot_partition_menu
             fi
-            
-            select_disk_boot_partition_menu
         elif [[ $result -eq 4 ]] ; then
             select_disk_system_partition_menu
         elif [[ $result -eq 5 ]] ; then
