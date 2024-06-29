@@ -228,8 +228,7 @@ main_menu(){
       #              "2" "Manual Install" \
         echo -ne "\033c"
         if [[ $result -eq 0 ]] ; then
-            #reboot -f
-            echo "reboot"
+            reboot -f
         elif [[ $result -eq 1 ]] ; then
            select_disk_menu
         elif [[ $result -eq 2 ]] ; then
