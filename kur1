@@ -51,7 +51,8 @@ echo "********************* kurulum başladı******************************"
 
 mount -t iso9660 -o loop /dev/sr0 cdrom
 mount -t squashfs -o loop /cdrom/live/filesystem.squashfs /kaynak
-cp -prfv /kaynak/* /hedef/
+#cp -prfv /kaynak/* /hedef/
+rsync -axHAWXS --numeric-ids --info=progress2 /kaynak/ /hedef/
 cp /cdrom/boot/initrd.img /hedef/boot/initrd.img-$(uname -r)
 cp /cdrom/boot/vmlinuz /hedef/boot/vmlinuz-$(uname -r)
 cp /hedef/etc/kernel-config /hedef/boot/config-$(uname -r)

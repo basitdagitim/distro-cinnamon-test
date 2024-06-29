@@ -52,6 +52,7 @@ select_disk_menu(){
     done
 }
 select_disk_boot_partition_menu(){
+
     while true ;  do
        installbootpartition=/dev/$(TITLE="Select a disk for installation Partition" select_partition)
        installsystempartition="${installbootpartition}"
@@ -225,6 +226,10 @@ main_menu(){
         elif [[ $result -eq 2 ]] ; then
             cfdisk $installdisk
         elif [[ $result -eq 3 ]] ; then
+            if [[ -d /sys/block/$installdisk/${installdisk}1 ]] ; then
+            	  cfdisk $installdisk
+            fi
+            
             select_disk_boot_partition_menu
         elif [[ $result -eq 4 ]] ; then
             select_disk_system_partition_menu
