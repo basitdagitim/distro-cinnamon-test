@@ -163,15 +163,24 @@ mksquashfs $rootfs $distro/filesystem.squashfs -comp xz -wildcards
 mv $distro/filesystem.squashfs $distro/iso/live/filesystem.squashfs
 
 #### Write grub.cfg
+# Timeout for menu
+echo -e "set timeout=60\n"
 
 
-echo 'menuentry "Canli(live) GNU/Linux 64-bit" --class liveiso  {' > $distro/iso/boot/grub/grub.cfg
-echo '    linux /boot/vmlinuz boot=live net.ifnames=0 biosdevname=0' >> $distro/iso/boot/grub/grub.cfg
-echo '    initrd /boot/initrd.img' >> $distro/iso/boot/grub/grub.cfg
-echo '}' >> $distro/iso/boot/grub/grub.cfg
+# Default boot entry
+echo -e "set default=0\n"> $distro/iso/boot/grub/grub.cfg
+
+# Menu Colours
+echo -e "set menu_color_normal=white/black\n">> $distro/iso/boot/grub/grub.cfg
+echo -e "set menu_color_highlight=white\/green\n">> $distro/iso/boot/grub/grub.cfg
 
 echo 'menuentry "Kur GNU/Linux 64-bit" --class liveiso  {' >> $distro/iso/boot/grub/grub.cfg
 echo '    linux /boot/vmlinuz boot=live init=/bin/kur ' >> $distro/iso/boot/grub/grub.cfg
+echo '    initrd /boot/initrd.img' >> $distro/iso/boot/grub/grub.cfg
+echo '}' >> $distro/iso/boot/grub/grub.cfg
+
+echo 'menuentry "Canli(live) GNU/Linux 64-bit" --class liveiso  {' >> $distro/iso/boot/grub/grub.cfg
+echo '    linux /boot/vmlinuz boot=live net.ifnames=0 biosdevname=0' >> $distro/iso/boot/grub/grub.cfg
 echo '    initrd /boot/initrd.img' >> $distro/iso/boot/grub/grub.cfg
 echo '}' >> $distro/iso/boot/grub/grub.cfg
 

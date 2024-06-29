@@ -9,39 +9,39 @@ installuserpasswd=""
 installrootpasswdstar=""
 installlang="tr_TR"
 installkeyboard="trq"
-mesaj="Ayarları Seçin"
+mesaj="Ayarlari Secin"
 emptyfieldcheck()
 {
 if [ -z "${installdisk}" ];then
-	mesaj="Disk Seçiniz"
+	mesaj="Disk Seciniz"
 	echo "1"
 elif [ -z "${installbootpartition}" ];then
-	mesaj="boot Kurulumu için Bölümü Seçiniz"
+	mesaj="boot Kurulumu icin Bolumu Seciniz"
 	echo "1"
 elif [ -z "${installsystempartition}" ];then
-	mesaj="system Kurulumu için Bölümü Seçiniz"
+	mesaj="system Kurulumu icin Bolumu Seciniz"
 	echo "1"
 elif [ -z "${installrootpasswd}" ];then
-	mesaj="root Parolası Belirleyiniz"
+	mesaj="root Parolasi Belirleyiniz"
 	echo "1"
 elif [ -z "${installusername}" ];then
-	mesaj="Kullanıcı Adı Belirleyiniz"
+	mesaj="Kullanici Adi Belirleyiniz"
 	echo "1"
 elif [ -z "${installuserpasswd}" ];then
-	mesaj="Kullanıcı Parolası Belirleyiniz"
+	mesaj="Kullanici Parolasi Belirleyiniz"
 	echo "1"
 elif [ -z "${installlang}" ];then
-	mesaj="Dil Seçiniz"
+	mesaj="Dil Seciniz"
 	echo "1"
 elif [ -z "${installkeyboard}" ];then
-	mesaj="Klavye Seçiniz"
+	mesaj="Klavye Seciniz"
 	echo "1"
 elif [ -n "${installdisk}" ] || [ -n "${installbootpartition}" ]  || [ -n "${installsystempartition}" ]|| [ -n "${installrootpasswd}" ] || [ -n "${installusername}" ] || [ -n "${installuserpasswd}" ] || [ -n "${installlang}" ] || [ -n "${installkeyboard}" ];then
 	echo "2"
 fi
 }
 install_main(){
-echo "kurulum yapılacak disk : ${installdisk}"
+echo "kurulum yapilacak disk : ${installdisk}"
 return
 }
 select_disk_menu(){
@@ -185,25 +185,31 @@ set_keyboard(){
 install1()
 {
 source kur1
-echo "tek bölüme kurulum ........"
+echo "tek bolumune kurulum ........"
 kurulum
 #exit
 }
 install2()
 {
 source kur2
-echo "boot-system ayrı bölümlere kurulum ........"
+echo "boot-system ayrı bolumlere kurulum ........"
 kurulum
 #exit  
 }
 yenidenbaslat()
 {
-echo "Sistem Yeniden Başlatılıyor.............."
+echo "Sistem Yeniden Baslatiliyor.............."
 if [[ $$ -eq 0 ]] ; then
             echo o > /proc/sysrq-trigger
         else
             exit 1
         fi
+}
+
+start_live(){
+    killall udevd &>/dev/null || true
+    exec /sbin/openrc-init
+
 }
 ###### Main Menu ######
 main_menu(){
@@ -222,7 +228,11 @@ main_menu(){
             "8" "Set Language	 	( $installlang )" \
 	    "9" "Set Keyboard	 	( $installkeyboard )" \
             "10" "Install" \
-            "11" "Run Terminal" \
+            "11" "--------------------------" \            
+            "12" "Run Terminal" \
+            "13" "--------------------------" \            
+            "14" "Start in Live Mode" \
+            
             "0" "Reboot"
         )
       #              "2" "Manual Install" \
@@ -272,10 +282,14 @@ main_menu(){
            		install2         	
            	fi
            fi
-        elif [[ $result -eq 11 ]] ; then
+        elif [[ $result -eq 12 ]] ; then
            echo -e "\033[33;1mTerminal mode. You can type exit and go back.\033[;0m"
             PS1="\033[32;1m>>>\033[;0m " /bin/busybox ash
+
+	elif [[ $result -eq 14 ]] ; then
+          start_live
         fi
+        
         echo $result
     done
 }
