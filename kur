@@ -196,6 +196,15 @@ echo "boot-system ayrı bölümlere kurulum ........"
 kurulum
 #exit  
 }
+yenidenbaslat()
+{
+echo "Sistem Yeniden Başlatılıyor.............."
+if [[ $$ -eq 0 ]] ; then
+            echo o > /proc/sysrq-trigger
+        else
+            exit 1
+        fi
+}
 ###### Main Menu ######
 main_menu(){
     while true ; do

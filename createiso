@@ -47,8 +47,8 @@ echo "anadolulinux/lfs-binary-packages">>$rootfs/etc/bps/sources.list
 ### installing bps package in rootfs
 $rootfs/bin/bps -u $rootfs
 #**********************************************************************
-#echo root:x:0:0:root:/root:/bin/sh > $rootfs/etc/passwd 
-#chmod 755 $rootfs/etc/passwd
+echo root:x:0:0:root:/root:/bin/sh > $rootfs/etc/passwd 
+chmod 755 $rootfs/etc/passwd
 #chroot $rootfs echo -e "1\n1\n"|chroot $rootfs passwd root
 #**********************************************************************
 #chroot $rootfs /bin/bps -i distro-core-base

@@ -12,7 +12,8 @@ modprobe ext4
 
 debug=false
 DISK=${installdisk/*\//}
-echo "boot system Ayrı Kurulum Yapılacak Disk $DISK
+
+echo "boot system Ayrı Kurulum Yapılacak Disk $DISK"
 
 fallback(){
         echo -e "\033[31;1mInstallation failed.\033[;0m"
@@ -95,8 +96,8 @@ echo "linux /vmlinuz-$(uname -r) init=/sbin/openrc-init root=UUID=${bid} rw quie
 echo "initrd /initrd.img-$(uname -r)">>/hedef/boot/grub/grub.cfg
 echo "boot">>/hedef/boot/grub/grub.cfg
 
-echo root:x:0:0:root:/root:/bin/sh > /hedef/etc/passwd 
-chroot /hedef chmod 755 /etc/passwd
+#echo root:x:0:0:root:/root:/bin/sh > /hedef/etc/passwd 
+#chroot /hedef chmod 755 /etc/passwd
 chroot /hedef echo -e "$installrootpasswd\n$installrootpasswd\n"|chroot /hedef passwd root
 
 chroot /hedef useradd $installusername -m -s /bin/sh  -d /home/$installusername
