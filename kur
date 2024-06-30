@@ -213,7 +213,7 @@ start_live(){
 }
 ###### Main Menu ######
 main_menu(){
-    while true ; do
+     while true ; do
         result=$(dialog --no-cancel \
         --backtitle "$mesaj"\
             --output-fd 1 --menu \
@@ -227,18 +227,17 @@ main_menu(){
             "7" "Set User Password 	( $installuserpasswdstar )" \
             "8" "Set Language	 	( $installlang )" \
 	    "9" "Set Keyboard	 	( $installkeyboard )" \
-            "10" "Install" \
-            "11" "--------------------------" \            
-            "12" "Run Terminal" \
-            "13" "--------------------------" \            
-            "14" "Start in Live Mode" \
-            
-            "0" "Reboot"
+            "i" "Install" \
+            "" "                      " \
+            "t" "Run Terminal" \
+            "" "                      " \
+            "l" "Start in Live Mode" \
+            "r" "Reboot"
         )
-      #              "2" "Manual Install" \
-        echo -ne "\033c"
-        if [[ $result -eq 0 ]] ; then
-            #reboot -f
+         echo -ne "\033c"
+        if [[ "$result" == "r" ]] ; then
+           reboot -f
+            echo "reboot"
         elif [[ $result -eq 1 ]] ; then
            select_disk_menu
         elif [[ $result -eq 2 ]] ; then
@@ -271,7 +270,7 @@ main_menu(){
         elif [[ $result -eq 9 ]] ; then
             installkeyboard=""
 	   set_keyboard
-        elif [[ $result -eq 10 ]] ; then
+        elif [[ "$result" == "i" ]] ; then
             #start_openrc
            durum=$(emptyfieldcheck)
            if [[ "$durum" == "2" ]] ; then
@@ -282,16 +281,16 @@ main_menu(){
            		install2         	
            	fi
            fi
-        elif [[ $result -eq 12 ]] ; then
+        elif [[ "$result" == "t" ]] ; then
            echo -e "\033[33;1mTerminal mode. You can type exit and go back.\033[;0m"
             PS1="\033[32;1m>>>\033[;0m " /bin/busybox ash
 
-	elif [[ $result -eq 14 ]] ; then
+	elif [[ "$result" == "l" ]] ; then
           start_live
         fi
         
         echo $result
-    done
+done
 }
 
 main_menu
