@@ -164,7 +164,7 @@ mv $distro/filesystem.squashfs $distro/iso/live/filesystem.squashfs
 
 #### Write grub.cfg
 # Timeout for menu
-echo -e "set timeout=3\n"> $distro/iso/boot/grub/grub.cfg
+echo -e "set timeout=0\n"> $distro/iso/boot/grub/grub.cfg
 
 
 # Default boot entry

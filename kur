@@ -13,29 +13,21 @@ mesaj="Ayarlari Secin"
 emptyfieldcheck()
 {
 if [ -z "${installdisk}" ];then
-	mesaj="Disk Seciniz"
-	echo "1"
+	echo "Disk Seciniz"
 elif [ -z "${installbootpartition}" ];then
-	mesaj="boot Kurulumu icin Bolumu Seciniz"
-	echo "1"
+	echo "boot Kurulumu icin Bolumu Seciniz"
 elif [ -z "${installsystempartition}" ];then
-	mesaj="system Kurulumu icin Bolumu Seciniz"
-	echo "1"
+	echo "system Kurulumu icin Bolumu Seciniz"
 elif [ -z "${installrootpasswd}" ];then
-	mesaj="root Parolasi Belirleyiniz"
-	echo "1"
+	echo "root Parolasi Belirleyiniz"
 elif [ -z "${installusername}" ];then
-	mesaj="Kullanici Adi Belirleyiniz"
-	echo "1"
+	echo "Kullanici Adi Belirleyiniz"
 elif [ -z "${installuserpasswd}" ];then
-	mesaj="Kullanici Parolasi Belirleyiniz"
-	echo "1"
+	echo "Kullanici Parolasi Belirleyiniz"
 elif [ -z "${installlang}" ];then
-	mesaj="Dil Seciniz"
-	echo "1"
+	echo "Dil Seciniz"
 elif [ -z "${installkeyboard}" ];then
-	mesaj="Klavye Seciniz"
-	echo "1"
+	echo "Klavye Seciniz"
 elif [ -n "${installdisk}" ] || [ -n "${installbootpartition}" ]  || [ -n "${installsystempartition}" ]|| [ -n "${installrootpasswd}" ] || [ -n "${installusername}" ] || [ -n "${installuserpasswd}" ] || [ -n "${installlang}" ] || [ -n "${installkeyboard}" ];then
 	echo "2"
 fi
@@ -272,7 +264,9 @@ main_menu(){
 	   set_keyboard
         elif [[ "$result" == "i" ]] ; then
             #start_openrc
+
            durum=$(emptyfieldcheck)
+                       mesaj="$durum"
            if [[ "$durum" == "2" ]] ; then
            	echo "kuruluma geçildi........"
            	if [[ "$installsystempartition" == "$installbootpartition" ]] ; then
@@ -292,5 +286,15 @@ main_menu(){
         echo $result
 done
 }
+if [[ $$ -eq 0 ]] ; then
+echo "*********************eudev çalıştırıldı ******************************"
+udevd --daemon --resolve-names=never #modprobe yerine kullanılıyor
+udevadm trigger --type=subsystems --action=add
+udevadm trigger --type=devices --action=add
+udevadm settle || true
+echo "*********************ek modüller yüklendi ******************************"
+modprobe loop
+modprobe ext4
+fi
 
 main_menu

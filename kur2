@@ -1,19 +1,18 @@
 #!/bin/sh
 kurulum()
 {
-echo "*********************eudev çalıştırıldı ******************************"
-udevd --daemon --resolve-names=never #modprobe yerine kullanılıyor
-udevadm trigger --type=subsystems --action=add
-udevadm trigger --type=devices --action=add
-udevadm settle || true
-echo "*********************ek modüller yüklendi ******************************"
-modprobe loop
-modprobe ext4
+
 
 debug=false
 DISK=${installdisk/*\//}
-
-echo "boot system Ayrı Kurulum Yapılacak Disk $DISK"
+ #########################################################
+    if echo ${DISK} | grep nvme ; then
+        DISKX=${DISK}p
+    else
+        DISKX=${DISK}
+    fi
+ ############################################################
+echo "boot system Ayrı Kurulum Yapılacak Disk $DISKX"
 
 fallback(){
         echo -e "\033[31;1mInstallation failed.\033[;0m"
@@ -39,18 +38,18 @@ echo "*********************disk bölümleri silindi ****************************
         yes | parted /dev/${DISK} mkpart primary fat32 1 "1024MB" || fallback
         yes | parted /dev/${DISK} mkpart primary fat32 1024MB "100%" || fallback
         sync && sleep 1
-        yes | mkfs.vfat /dev/${DISK}1 || fallback
+        yes | mkfs.vfat /dev/${DISKX}1 || fallback
         sync && sleep 1
         yes |e2fsck -f /dev/${DISK}2
          sync && sleep 1
 	yes |tune2fs -O ^metadata_csum /dev/${DISK}2
 	 sync && sleep 1
-        yes | mkfs.ext4  /dev/${DISK}2 || fallback
+        yes | mkfs.ext4  /dev/${DISKX}2 || fallback
         yes | parted /dev/${DISK} set 1 esp on || fallback
         sync && sleep 1
-        mount /dev/${DISK}2  /hedef || fallback
+        mount /dev/${DISKX}2  /hedef || fallback
         mkdir -p /hedef/boot 
-        mount /dev/${DISK}1 /hedef/boot || fallback
+        mount /dev/${DISKX}1 /hedef/boot || fallback
 echo "********************* kurulum başladı******************************"
 
 
