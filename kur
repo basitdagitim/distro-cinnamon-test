@@ -10,6 +10,8 @@ installrootpasswdstar=""
 installlang="tr_TR"
 installkeyboard="trq"
 mesaj="Ayarlari Secin"
+DISKX=""
+DISK=""
 emptyfieldcheck()
 {
 if [ -z "${installdisk}" ];then
@@ -235,12 +237,19 @@ main_menu(){
         elif [[ $result -eq 2 ]] ; then
             cfdisk $installdisk
         elif [[ $result -eq 3 ]] ; then
-        	dsk=${installdisk/*\//}
-            if [ ! -d "/sys/block/$dsk/${dsk}1" ] ; then
-            	  cfdisk $installdisk
-            else
+            dsk=${installdisk/*\//}
+	    #########################################################
+	    if echo ${dsk} | grep nvme ; then
+		dskx=${dsk}p
+	    else
+		dskx=${dsk}
+	    fi
+	
+            #if [ ! -d "/sys/block/$dskx/${dskx}1" ] ; then
+            #	  cfdisk $installdisk
+            #else
             	select_disk_boot_partition_menu
-            fi
+            #fi
         elif [[ $result -eq 4 ]] ; then
             select_disk_system_partition_menu
         elif [[ $result -eq 5 ]] ; then
@@ -286,7 +295,7 @@ main_menu(){
         echo $result
 done
 }
-if [[ $$ -eq 0 ]] ; then
+if [[ $UID -eq 0 ]] ; then
 echo "*********************eudev çalıştırıldı ******************************"
 udevd --daemon --resolve-names=never #modprobe yerine kullanılıyor
 udevadm trigger --type=subsystems --action=add
