@@ -6,7 +6,7 @@ debug=false
 DISK=${installdisk/*\//}
  #########################################################
     if echo ${DISK} | grep nvme ; then
-        DISKX=${DISK}p
+        DISKX="${DISK}p"
     else
         DISKX=${DISK}
     fi
@@ -49,8 +49,9 @@ echo "*********************disk bölümleri silindi ****************************
         mkdir -p /hedef/boot 
 echo "********************* kurulum başladı******************************"
 
-mount -t iso9660 -o loop /dev/sr0 cdrom
-mount -t squashfs -o loop /cdrom/live/filesystem.squashfs /kaynak
+#mount -t iso9660 -o loop /dev/sr0 cdrom
+#mount -t squashfs -o loop /cdrom/live/filesystem.squashfs /kaynak
+mount /dev/loop0 /kaynak || true
 #cp -prfv /kaynak/* /hedef/
 #rsync -axHAWXS --numeric-ids --info=progress2 /kaynak/ /hedef/
 ls /kaynak/ | xargs -n1 -P$(nproc) -I% /usr/bin/rsync -ravhHAX --info=progress2 /kaynak/% /hedef/ &>/dev/null|| fallback
