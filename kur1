@@ -48,10 +48,12 @@ echo "*********************disk bölümleri silindi ****************************
         mount /dev/${DISKX}1  /hedef || fallback
         mkdir -p /hedef/boot 
 echo "********************* kurulum başladı******************************"
-
-#mount -t iso9660 -o loop /dev/sr0 cdrom
-#mount -t squashfs -o loop /cdrom/live/filesystem.squashfs /kaynak
+if [[ ! -f /run/live/rootfs/filesystem.squashfs ]] ; then
+mount -t iso9660 -o loop /dev/sr0 cdrom
+mount -t squashfs -o loop /cdrom/live/filesystem.squashfs /kaynak
+else
 mount /dev/loop0 /kaynak || true
+fi
 #cp -prfv /kaynak/* /hedef/
 #rsync -axHAWXS --numeric-ids --info=progress2 /kaynak/ /hedef/
 ls /kaynak/ | xargs -n1 -P$(nproc) -I% /usr/bin/rsync -ravhHAX --info=progress2 /kaynak/% /hedef/ &>/dev/null|| fallback
