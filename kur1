@@ -143,9 +143,9 @@ chroot /hedef /usr/sbin/update-initramfs -u -k $(uname -r)
 #chroot /hedef grub-install --removable --boot-directory=/boot /dev/${DISK} --hedef=i386-pc
 if [[ -d /sys/firmware/efi ]] ; then
     chroot /hedef mount -t efivarfs efivarfs /sys/firmware/efi/efivars || true
-    chroot /hedef grub-install /dev/${DISK} --hedef=x86_64-efi || fallback
+    chroot /hedef grub-install /dev/${DISK} --target=x86_64-efi || fallback
 else
-    chroot /hedef grub-install /dev/${DISK} --hedef=i386-pc || fallback
+    chroot /hedef grub-install /dev/${DISK} --target=i386-pc || fallback
 fi
 
 mkdir -p /hedef/boot/grub
