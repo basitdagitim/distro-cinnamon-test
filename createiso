@@ -6,7 +6,7 @@ if which apt &>/dev/null && [[ -d /var/lib/dpkg && -d /etc/apt ]] ; then
     apt install xorriso grub-pc-bin grub-efi mtools make python3 dosfstools e2fsprogs squashfs-tools python3-yaml gcc wget curl unzip xz-utils debootstrap git erofs-utils zstd -y
 fi
 
-apt-get install git devscripts equivs -y
+apt-get install rdfind git devscripts equivs -y
 #------------------------------------------------------------------------------------
 rootfs="/root/distro/rootfs"
 distro="/root/distro"
@@ -42,7 +42,8 @@ echo "basitdagitim/bps-apps">>$rootfs/etc/bps/sources.list
 echo "basitdagitim/x11-bps-binary-packages">>$rootfs/etc/bps/sources.list
 echo "basitdagitim/lxde-bps-binary-packages">>$rootfs/etc/bps/sources.list
 echo "basitdagitim/cinnamon-bps-binary-packages">>$rootfs/etc/bps/sources.list
-echo "anadolulinux/lfs-binary-packages">>$rootfs/etc/bps/sources.list
+echo "basitdagitim/bps-firmware">>$rootfs/etc/bps/sources.list
+echo "bpslinux/lfs-binary-packages">>$rootfs/etc/bps/sources.list
 
 ### installing bps package in rootfs
 $rootfs/bin/bps -u $rootfs
@@ -113,7 +114,7 @@ chroot $rootfs /bin/bps -i lightdm-gtk-greeter
 #hroot $rootfs /bin/bps -i lightdm-pardus-greeter
 chroot $rootfs /bin/bps -i libgpg-error
 chroot $rootfs /bin/bps -i live-installer
-
+chroot $rootfs /bin/bps -i rdfind
 #dil ayarını en son yapıyoruz
 chroot $rootfs /bin/bps -i locale-tr
 chroot $rootfs /bin/install-remove-to-do
@@ -135,6 +136,19 @@ for grp in users tty wheel cdrom audio dip video plugdev netdev; do
     chroot $rootfs usermod -aG $grp live || true
 done
 
+chroot $rootfs /bin/bps -i fw-amd
+chroot $rootfs /bin/bps -i fw-generic
+chroot $rootfs /bin/bps -i fw-ath
+chroot $rootfs depmod -a
+
+# set permissions
+#chmod 1777 $rootfs/tmp
+#chmod 700 rootfs/root
+#chown root:root $rootfs/root
+#chmod 111 $rootfs/bin
+#chmod 111 $rootfs/sbin
+#chmod 111 $rootfs/usr/bin
+#chmod 111 $rootfs/usr/sbin
 
 
 ### update-initrd
@@ -164,7 +178,7 @@ mv $distro/filesystem.squashfs $distro/iso/live/filesystem.squashfs
 
 #### Write grub.cfg
 # Timeout for menu
-echo -e "set timeout=0\n"> $distro/iso/boot/grub/grub.cfg
+echo -e "set timeout=10\n"> $distro/iso/boot/grub/grub.cfg
 
 
 # Default boot entry
@@ -173,6 +187,9 @@ echo -e "set default=1\n">> $distro/iso/boot/grub/grub.cfg
 # Menu Colours
 echo -e "set menu_color_normal=white/black\n">> $distro/iso/boot/grub/grub.cfg
 echo -e "set menu_color_highlight=white\/blue\n">> $distro/iso/boot/grub/grub.cfg
+echo -e "insmod all_video">> $distro/iso/boot/grub/grub.cfg
+echo -e "terminal_output console">> $distro/iso/boot/grub/grub.cfg
+echo -e "terminal_input console">> $distro/iso/boot/grub/grub.cfg
 
 echo 'menuentry "Canli(live) GNU/Linux 64-bit" --class liveiso  {' >> $distro/iso/boot/grub/grub.cfg
 echo '    linux /boot/vmlinuz boot=live init=/sbin/openrc-init net.ifnames=0 biosdevname=0' >> $distro/iso/boot/grub/grub.cfg

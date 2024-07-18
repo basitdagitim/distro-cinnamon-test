@@ -2,16 +2,20 @@
 installdisk=""
 installbootpartition=""
 installsystempartition=""
-installrootpasswd=""
-installrootpasswdstar=""
-installusername=""
-installuserpasswd=""
-installrootpasswdstar=""
+installrootpasswd="1"
+installrootpasswdstar="****"
+installusername="user1"
+installuserpasswd="1"
+installuserpasswdstar="****"
 installlang="tr_TR"
 installkeyboard="trq"
 mesaj="Ayarlari Secin"
 DISKX=""
 DISK=""
+result=""
+dsk=""
+dskx=""
+
 emptyfieldcheck()
 {
 if [ -z "${installdisk}" ];then
@@ -49,7 +53,10 @@ select_disk_boot_partition_menu(){
 
     while true ;  do
        installbootpartition=/dev/$(TITLE="Select a disk for installation Partition" select_partition)
-       installsystempartition="${installbootpartition}"
+           if [[ ! -d /sys/firmware/efi ]] ; then
+    	       installsystempartition="${installbootpartition}"
+    	   fi
+
        return
     done
 }
@@ -176,20 +183,7 @@ set_keyboard(){
     done
     echo $installkeyboard
 }
-install1()
-{
-source kur1
-echo "tek bolumune kurulum ........"
-kurulum
-#exit
-}
-install2()
-{
-source kur2
-echo "boot-system ayrı bolumlere kurulum ........"
-kurulum
-#exit  
-}
+
 yenidenbaslat()
 {
 echo "Sistem Yeniden Baslatiliyor.............."
@@ -205,9 +199,89 @@ start_live(){
     exec /sbin/openrc-init
 
 }
+
+uefiuyar(){
+
+      dialog --stdout --title "Dikkat!" \
+  	--backtitle "install" \
+  	--yesno "Diske  daha once legacy kurulum yapilmis. \
+  	 \nIsleme devam ederseniz diskteki tum bilgiler silinecek.\
+  	 \nIsleme devam etmek istiyor musunuz?" 7 60
+	
+	operation=$?
+	if [[ "$operation" == "0" ]]; then
+		result="yes"
+	else
+		result="no"
+	fi
+	echo $result
+}
+
+legacyuyar(){
+
+      dialog --stdout --title "Dikkat!" \
+  	--backtitle "install" \
+  	--yesno "Diske  daha once uefi kurulum yapilmis. \
+  	 \nIsleme devam ederseniz diskteki tum bilgiler silinecek.\
+  	 \nIsleme devam etmek istiyor musunuz?" 7 60
+	
+	operation=$?
+	if [[ "$operation" == "0" ]]; then
+		result="yes"
+	else
+		result="no"
+	fi
+	echo $result
+}
+yukle()
+{
+echo "kuruluma geçildi........"
+           	#------------------------------------------------------------------------------------------------
+           	if [[ -d /sys/firmware/efi ]] ; then
+           		disklabel=$(blkid -s PTTYPE -o value "/dev/${dsk}")
+           	 	if [[ "$disklabel" != "gpt" ]]; then
+           	 	
+		   	 	if [[ "$(uefiuyar)" == "yes" ]]; then
+					echo -e "label:gpt"|sfdisk "/dev/${dsk}"
+	     				installsystempartition=""
+	     				installbootpartition=""
+	     				cfdisk "/dev/${dsk}"
+				fi
+     				
+     			else
+     				if [[ "$installsystempartition" != "$installbootpartition" ]] ; then
+	     				source kur1
+					echo "uefi kurulum ........"
+					kurulum
+				else
+					mesaj="boot ve system bolumleri farkli olmali"
+				fi
+     			fi
+           	else
+           		disklabel=$(blkid -s PTTYPE -o value "/dev/${dsk}")
+           	 	if [[ "$disklabel" != "dos" ]]; then
+           	 		if [[ "$(legacyuyar)" == "yes" ]]; then
+					echo -e "label:dos"|sfdisk "/dev/${dsk}"
+     					installsystempartition=""
+     					installbootpartition=""
+     					cfdisk "/dev/${dsk}"
+				fi
+     			else
+     				if [[ "$installsystempartition" == "$installbootpartition" ]] ; then
+     					source kur1
+					echo "legacy kurulum ........"
+					kurulum
+				fi
+     			fi
+           	fi
+           	
+
+           	
+}
 ###### Main Menu ######
 main_menu(){
      while true ; do
+     if [[ -d /sys/firmware/efi ]] ; then
         result=$(dialog --no-cancel \
         --backtitle "$mesaj"\
             --output-fd 1 --menu \
@@ -228,28 +302,51 @@ main_menu(){
             "l" "Start in Live Mode" \
             "r" "Reboot"
         )
+       else
+        result=$(dialog --no-cancel \
+        --backtitle "$mesaj"\
+            --output-fd 1 --menu \
+            "Install Menu" 0 0 0 \
+            "1" "Select Disk		( $installdisk )" \
+            "2" "Create / Modify Partition" \
+            "3" "Select Partition	( $installbootpartition )" \
+            "5" "Set root Password	( $installrootpasswdstar )" \
+            "6" "Set Username 		( $installusername )" \
+            "7" "Set User Password 	( $installuserpasswdstar )" \
+            "8" "Set Language	 	( $installlang )" \
+	    "9" "Set Keyboard	 	( $installkeyboard )" \
+            "i" "Install" \
+            "" "                      " \
+            "t" "Run Terminal" \
+            "" "                      " \
+            "l" "Start in Live Mode" \
+            "r" "Reboot"
+        )
+       fi
+        
          echo -ne "\033c"
         if [[ "$result" == "r" ]] ; then
            reboot -f
             echo "reboot"
         elif [[ $result -eq 1 ]] ; then
            select_disk_menu
-        elif [[ $result -eq 2 ]] ; then
-            cfdisk $installdisk
-        elif [[ $result -eq 3 ]] ; then
+           #--------------------------------NVME--------------------------------------------
             dsk=${installdisk/*\//}
-	    #########################################################
 	    if echo ${dsk} | grep nvme ; then
 		dskx=${dsk}p
 	    else
 		dskx=${dsk}
 	    fi
-	
-            #if [ ! -d "/sys/block/$dskx/${dskx}1" ] ; then
-            #	  cfdisk $installdisk
-            #else
+	    #----------------------------------------------------------------------------
+        elif [[ $result -eq 2 ]] ; then
+            cfdisk $installdisk
+        elif [[ $result -eq 3 ]] ; then
+           
+            if [ ! -d "/sys/block/$dsk/${dskx}1" ] ; then
+            	  cfdisk /dev/${dsk}
+            else
             	select_disk_boot_partition_menu
-            #fi
+            fi
         elif [[ $result -eq 4 ]] ; then
             select_disk_system_partition_menu
         elif [[ $result -eq 5 ]] ; then
@@ -272,17 +369,10 @@ main_menu(){
             installkeyboard=""
 	   set_keyboard
         elif [[ "$result" == "i" ]] ; then
-            #start_openrc
-
-           durum=$(emptyfieldcheck)
-                       mesaj="$durum"
+           durum=$(emptyfieldcheck)                       
+           mesaj="$durum"
            if [[ "$durum" == "2" ]] ; then
-           	echo "kuruluma geçildi........"
-           	if [[ "$installsystempartition" == "$installbootpartition" ]] ; then
-           		install1
-           	else
-           		install2         	
-           	fi
+           	yukle
            fi
         elif [[ "$result" == "t" ]] ; then
            echo -e "\033[33;1mTerminal mode. You can type exit and go back.\033[;0m"
@@ -304,6 +394,10 @@ udevadm settle || true
 echo "*********************ek modüller yüklendi ******************************"
 modprobe loop
 modprobe ext4
+cd /bin/
+ln -s busybox hostname
+cd -
+loadkeys trq
 fi
 
 main_menu

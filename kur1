@@ -12,7 +12,7 @@ DISK=${installdisk/*\//}
     fi
  ############################################################
 
-echo "Tek Bolum  Kurulum Yapılacak Disk $DISKX"
+echo "Kurulum Yapılacak Disk $DISK"
 
 fallback(){
         echo -e "\033[31;1mInstallation failed.\033[;0m"
@@ -28,7 +28,9 @@ if [[ $UID -eq 0 ]] ; then
     mount -t devtmpfs devtmpfs /dev || true
     mount -t proc proc /proc || true
     mount -t sysfs sysfs /sys || true
-    mount -t efivarfs efivars /sys/firmware/efi/efivars || true
+    if [[ -d /sys/firmware/efi ]] ; then
+    	mount -t efivarfs efivars /sys/firmware/efi/efivars || true
+    fi
 fi
 
 mkdir -p hedef
@@ -41,37 +43,39 @@ else
 mount /dev/loop0 /kaynak || true
 fi
 
-echo "*********************disk bölümleri silindi ******************************"
+echo "*********************disk bölümleri biçimlendiriliyor ******************************"
 #--------------------------------------------------------------------------------------------
+
 if [[ "$partitioning" == "true" ]] ; then
-    dd if=/dev/zero of=/dev/${DISK} bs=512 count=1
+#    dd if=/dev/zero of=/dev/${DISK} bs=512 count=1
     sync && sleep 1
     
      if [[ -d /sys/firmware/efi ]] ; then
-        yes | parted /dev/${DISK} mktable gpt || fallback
-        yes | parted /dev/${DISK} mkpart primary fat32 1 "100MB" || fallback
-        yes | parted /dev/${DISK} mkpart primary fat32 100MB "100%" || fallback
+        #yes | parted /dev/${DISK} mktable gpt || fallback
+        #yes | parted /dev/${DISK} mkpart primary fat32 1 "100MB" || fallback
+        #yes | parted /dev/${DISK} mkpart primary fat32 100MB "100%" || fallback
         sync && sleep 1
-        yes | mkfs.vfat /dev/${DISKX}1 || fallback
+        yes | mkfs.vfat $installbootpartition || fallback
         sync && sleep 1
-        yes | mkfs.ext4  /dev/${DISKX}2 || fallback
+        yes | mkfs.ext4  $installsystempartition || fallback
         yes | parted /dev/${DISK} set 1 esp on || fallback
         sync && sleep 1
-        mount /dev/${DISKX}2  /hedef || fallback
+        mount $installsystempartition  /hedef || fallback
         mkdir -p /hedef/boot/efi || true
-        mount /dev/${DISKX}1 /hedef/boot/efi  || fallback
+        mount $installbootpartition /hedef/boot/efi  || fallback
     else
-        yes | parted /dev/${DISK} mktable msdos || fallback
-        yes | parted /dev/${DISK} mkpart primary fat32 1 "100%" || fallback
+   
+        #yes | parted /dev/${DISK} mktable msdos || fallback
+        #yes | parted /dev/${DISK} mkpart primary fat32 1 "100%" || fallback
         sync && sleep 1
-        yes |e2fsck -f /dev/${DISK}1
+        yes |e2fsck -f $installsystempartition
         sync && sleep 1
-	yes |tune2fs -O ^metadata_csum /dev/${DISK}1
+	yes |tune2fs -O ^metadata_csum $installsystempartition
 	sync && sleep 1
-        yes | mkfs.ext4  /dev/${DISKX}1 || fallback
-        yes | parted /dev/${DISK} set 1 esp on || fallback
+        yes | mkfs.ext4  $installsystempartition || fallback
+        yes | parted /dev/${DISK} set 1 boot on || fallback
         sync && sleep 1
-        mount /dev/${DISKX}1  /hedef || fallback
+        mount $installsystempartition  /hedef || fallback
         mkdir -p /hedef/boot
     fi
 else
@@ -112,10 +116,10 @@ sync
 
 if [[ "$partitioning" == "true" ]] ; then
     if [[ -d /sys/firmware/efi ]] ; then
-        echo "/dev/${DISKX}2 /               ext4    errors=remount-ro        0       1" > /hedef/etc/fstab  || fallback
-        echo "/dev/${DISKX}1 /boot/efi       vfat    umask=0077               0       0" >> /hedef/etc/fstab  || fallback
+        echo "${installsystempartition} /               ext4    errors=remount-ro        0       1" > /hedef/etc/fstab  || fallback
+        echo "${installbootpartition}/boot/efi       vfat    umask=0077               0       0" >> /hedef/etc/fstab  || fallback
     else
-        echo "/dev/${DISKX}1 /               ext4    errors=remount-ro        0       1" > /hedef/etc/fstab  || fallback
+        echo "${installsystempartition} /               ext4    errors=remount-ro        0       1" > /hedef/etc/fstab  || fallback
     fi
 else
     echo "Please write fstab file. Press any key to open editor."
@@ -141,6 +145,8 @@ cp /hedef/etc/skel/.profile /hedef/root/
 
 chroot /hedef /usr/sbin/update-initramfs -u -k $(uname -r)
 #chroot /hedef grub-install --removable --boot-directory=/boot /dev/${DISK} --hedef=i386-pc
+rm -rf /hedef/boot/grub/grub.cfg
+
 if [[ -d /sys/firmware/efi ]] ; then
     chroot /hedef mount -t efivarfs efivarfs /sys/firmware/efi/efivars || true
     chroot /hedef grub-install /dev/${DISK} --target=x86_64-efi || fallback
@@ -148,14 +154,15 @@ else
     chroot /hedef grub-install /dev/${DISK} --target=i386-pc || fallback
 fi
 
-mkdir -p /hedef/boot/grub
-bid=$(blkid /dev/${DISK}1|cut -d' ' -f2|cut -c 7-42)
-rm -rf /hedef/boot/grub/grub.cfg
-touch /hedef/boot/grub/grub.cfg
-echo "linux /boot/vmlinuz-$(uname -r) init=/sbin/openrc-init root=UUID=${bid} rw quiet">>/hedef/boot/grub/grub.cfg
-echo "initrd /boot/initrd.img-$(uname -r)">>/hedef/boot/grub/grub.cfg
-echo "boot">>/hedef/boot/grub/grub.cfg
-
+#mkdir -p /hedef/boot/grub
+#bid=$(blkid ${installsystempartition}|cut -d' ' -f2|cut -c 7-42)
+#rm -rf /hedef/boot/grub/grub.cfg
+#touch /hedef/boot/grub/grub.cfg
+#echo "linux /boot/vmlinuz-$(uname -r) init=/sbin/openrc-init root=UUID=${bid} rw quiet">>/hedef/boot/grub/grub.cfg
+#echo "initrd /boot/initrd.img-$(uname -r)">>/hedef/boot/grub/grub.cfg
+#echo "boot">>/hedef/boot/grub/grub.cfg
+#echo "grub.cfg oluştu"
+#sleep 10
 #echo root:x:0:0:root:/root:/bin/sh > /hedef/etc/passwd 
 #chroot /hedef chmod 755 /etc/passwd
 chroot /hedef echo -e "$installrootpasswd\n$installrootpasswd\n"|chroot /hedef passwd root
@@ -170,9 +177,19 @@ chroot /hedef userdel -r live
 
 chroot /hedef mv /bin/su /bin/su-old
 chroot /hedef /bin/bps -r live-installer
+cd /hedef/sbin
+rm -f init
+ln -s openrc-init init
+cd -
+chroot /hedef grub-mkconfig -o /boot/grub/grub.cfg
+chroot /hedef update-grub  || fallback
+echo "grub update edildi"
+sleep 10
 
 
-
+if [[ -d /sys/firmware/efi ]] ; then
+      umount -lf /hedef/sys/firmware/efi/efivars/
+fi
 
 
 umount -f -R /hedef/* || true
