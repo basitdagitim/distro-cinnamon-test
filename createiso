@@ -43,7 +43,7 @@ echo "basitdagitim/x11-bps-binary-packages">>$rootfs/etc/bps/sources.list
 echo "basitdagitim/lxde-bps-binary-packages">>$rootfs/etc/bps/sources.list
 echo "basitdagitim/cinnamon-bps-binary-packages">>$rootfs/etc/bps/sources.list
 echo "basitdagitim/bps-firmware">>$rootfs/etc/bps/sources.list
-echo "bpslinux/lfs-binary-packages">>$rootfs/etc/bps/sources.list
+echo "celalakarsu/lfs-binary-packages">>$rootfs/etc/bps/sources.list
 
 ### installing bps package in rootfs
 $rootfs/bin/bps -u $rootfs
